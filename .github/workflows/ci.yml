@@ -28,6 +28,23 @@ jobs:
       - name: CLI help
         run: cargo run -p rotten-app -- --help
 
+  fpsap-helper:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: tools/fpsap-helper/go.mod
+      - name: Vet
+        working-directory: tools/fpsap-helper
+        run: go vet ./...
+      - name: Test
+        working-directory: tools/fpsap-helper
+        run: go test ./... -count=1
+      - name: Build
+        working-directory: tools/fpsap-helper
+        run: go build -o /dev/null .
+
   cross-compile-windows:
     runs-on: ubuntu-latest
     steps:

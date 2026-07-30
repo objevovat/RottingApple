@@ -21,10 +21,11 @@ RottingApple (MIT OR Apache-2.0) incorporates or invokes the following third-par
 - **Location:** `tools/fpsap-helper/`
 - **License:** GPL-3.0 (see `tools/fpsap-helper/LICENSE`).
 - **Distribution:** Build with Go (`scripts/build-windows.sh`) and ship `fpsap-helper` / `fpsap-helper.exe` next to `rottingapple`. Do not embed the GPL binary inside `rottingapple`.
+- **Contents:** the exchange is computed natively under `tools/fpsap-helper/internal/`. No ARM64 interpreter and no snapshot of Apple's signed binary are present. See `tools/fpsap-helper/PROVENANCE.md`.
 
 ## doubletake (reference)
 
-- **Use:** SAP hash algorithm reference for `fpsap-helper`.
+- **Use:** historical. `fpsap-helper` previously carried an ARM64 interpreter derived from doubletake, plus an embedded snapshot of Apple's FairPlay binary that the interpreter executed. Both were removed when the exchange was replaced by a native implementation of independent provenance.
 - **License:** GPL-3.0 — https://github.com/omarroth/doubletake
 
 ## Other Rust dependencies
