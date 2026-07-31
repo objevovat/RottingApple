@@ -36,26 +36,55 @@ here.
 ## What is and is not claimed
 
 No Apple instruction is executed or reproduced. There is no interpreter, no
-instruction dispatch, and no image of Apple's memory.
+instruction dispatch, and no image of Apple's binary.
 
-Apple-derived **data** does remain, and always will — this is white-box
-cryptography, where the key is dissolved into lookup tables, so the tables *are*
-the cipher. Concretely: white-box AES tables in `internal/fpbridge`, ~116 KB of
-baked table pages across the layer packages, and 79 distinct addresses from
-Apple's code segment that survive as constants because the buffer being hashed
-genuinely contains stack memory holding those return addresses. The change is
-that this data is no longer accompanied by Apple's code.
+**No Apple addresses either.** The generated code carries none — not as folded
+constants, not as data spilled into scratch memory, not as pointers inside the
+baked tables. `internal/layerguard` fails the build if one returns.
+
+That is worth spelling out because an earlier draft of this file claimed the
+opposite: that "79 code-segment addresses survive as constants because the
+hashed buffer really does contain stack memory holding them." **That was wrong.**
+The dyld shared cache is slid on every boot, so if any part of the response
+depended on the value of a code address, a device would return a different `m3`
+for the same `m2` after a reboot and the handshake would fail. Apple's does not.
+The addresses were inherited from the execution trace, not required by the
+algorithm — confirmed by sliding the entire cache window and observing identical
+output, against a control that inverts baked bytes and does change it.
+
+What genuinely remains is **data**, as it must for white-box cryptography, where
+the key is dissolved into lookup tables so the tables *are* the cipher:
+
+- the white-box AES T-boxes in `internal/fpbridge`
+- ~119 KB of constant table pages across the layer packages, four 4 KB pages per
+  generated file
+
+Whole pages are carried rather than the entries one trace happened to touch,
+because some read indices are payload-dependent. A byte-level sweep puts 21 of
+each 16 KB image in demonstrable use; the rest is a deliberate hedge, not proven
+necessary and not proven unnecessary.
+
+So: **blob-free, not snapshot-free.** No Apple binary, no interpreter, no build
+tag, no addresses — but constant tables and a small constant memory image.
 
 ## Size
 
-The generated layer packages are large: roughly 17 MB of Go, against the ~1.07 MB
-of interpreter and snapshot they replace. They are machine-generated
+The generated layer packages are large: roughly **8.1 MB** of Go, against the
+~1.07 MB of interpreter and snapshot they replace. They are machine-generated
 straight-line code produced by partial evaluation of an execution trace, not a
-compact algorithm — `layerc.EncodeX9` alone is 131,196 statements, and nobody
-can currently read it and explain what the encoding does.
+compact algorithm — `layerc.EncodeX9` alone is ~81,000 statements, and nobody can
+currently read it and explain what the encoding does.
 
-Reducing these to closed form is unfinished work. The trade being offered is
-**provenance for bulk**, and it should be evaluated on those terms.
+That figure was 17 MB when this PR was opened. Three passes in the generator have
+since taken it down: removing Apple's address space, re-encoding the emitted
+shapes (byte-at-a-time memory access became word operations; the 32-bit
+arithmetic, which arrived as nested casts at ~200,000 sites, is now named), and
+eliminating register writes whose results are never read (25% of statements).
+None changed a single output byte.
+
+Reducing this to closed form remains unfinished work. The trade being offered is
+still **provenance for bulk**, and it should be evaluated on those terms — the
+bulk is simply a good deal smaller than it was.
 
 ## Verification
 
@@ -64,9 +93,12 @@ Reducing these to closed form is unfinished work. The trade being offered is
   `omarroth/doubletake` — that compute this exchange by emulating Apple's
   binary, so agreement is independent of the reverse engineering behind this
   code
-- 227/227 differential comparisons against the interpreter this replaces,
-  including 200 random payloads and 20 full 142-byte m2 messages, run before the
-  interpreter was deleted
+- 287/287 differential comparisons against the interpreter this replaces,
+  including 250 random payloads and 30 full 142-byte m2 messages, run before the
+  interpreter was deleted and re-run after every size pass
+- `internal/layerguard`: a digest over all eight generated functions across 512
+  payloads, pinned to the value recorded before any of the size work, plus the
+  no-Apple-addresses check
 
 Upstream research repository:
 <https://github.com/objevovat/fairplay-sap-airplay2-authentication-handshake-whitebox-aes-md5-reverse-engineering-go-rust>

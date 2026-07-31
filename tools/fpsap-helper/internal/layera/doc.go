@@ -1,5 +1,5 @@
 // Package layera implements the FairPlay Layer-A inter-block chaining delta
-// natively, in plain Go: no build tag, no memory snapshot, no ARM64 interpreter.
+// natively, in plain Go: no build tag, no ARM64 interpreter, no Apple binary.
 //
 // DeltaB4 computes the delta shared by bridge blocks B4 and C3 from the first
 // 47 bytes of the Phase-1 GP buffer. Its companion, DeltaB5 in
@@ -15,6 +15,20 @@
 // checked bit-exactly against the interpreter over hundreds of independently
 // generated payloads by TestLayerANativeDeltaB4 and TestLayerANativeDeltaB4Random
 // in internal/m3trace.
+//
+// It is not snapshot-free. Each generated file carries a 16KB constant memory
+// image holding the tables the computation reads; whole pages are kept rather
+// than the entries one trace happened to touch, because some indices are
+// payload-dependent. Across the payloads measured, 21 bytes of it are ever
+// read. What the image does not contain is code or addresses:
+// scratch/layera_sanitize.py takes Apple's address space out of the generated
+// file, and layerguard checks both that it stays out and that removing
+// it changed no output.
+//
+// The emitter's raw output is about 65% larger than what is committed;
+// scratch/layera_compress.py rewrites byte-at-a-time memory access into word
+// operations and names the 32-bit arithmetic helpers in rt_gen.go. Both passes
+// run automatically at the end of layera_emit.py.
 //
 // See docs/layer-a-delta-chaining.md and docs/layer-a-researcher-handoff.md.
 package layera
