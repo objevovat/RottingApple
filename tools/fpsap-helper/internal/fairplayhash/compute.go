@@ -1,4 +1,5 @@
 package fairplayhash
+
 import (
 	"encoding/binary"
 )

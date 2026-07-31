@@ -1,5 +1,7 @@
 package fpbridge
 
+import "sync"
+
 // wbaesTypeIOrder contains the Type-I table index for each (round, position).
 // Rounds 1-9: each position maps to a unique table from TypeI[0..143].
 // Round 10: uses TypeI[144..159].
@@ -42,15 +44,17 @@ var wbaesMixingSigmaInv = [16]int{0, 4, 8, 12, 9, 5, 1, 13, 10, 2, 14, 6, 7, 11,
 // Combined formula: sub[i] = TypeI[order[σ(i)]][state[i]] ⊕ mixConst[i]
 var wbaesMixingConsts [9][16]byte
 
-// wbaesMixingConstsReady is set after init.
-var wbaesMixingConstsReady bool
+// wbaesMixingConstsOnce guards the one-time calibration. It was a plain bool,
+// which raced when two exchanges ran concurrently.
+var wbaesMixingConstsOnce sync.Once
 
 // wbaesInitMixingConsts precomputes the mixing constants for all 9 rounds.
 // Must be called before wbaesBlockTbox or wbaesBlockCore is used with non-zero inputs.
 func wbaesInitMixingConsts() {
-	if wbaesMixingConstsReady {
-		return
-	}
+	wbaesMixingConstsOnce.Do(buildMixingConsts)
+}
+
+func buildMixingConsts() {
 	// Zero-input calibration: state = all zeros
 	var zeroState [16]byte
 	for rnd := 0; rnd < 9; rnd++ {
@@ -103,7 +107,6 @@ func wbaesInitMixingConsts() {
 		zeroState[14] = byte(cols[3] >> 24)
 		zeroState[15] = byte(cols[0] >> 24)
 	}
-	wbaesMixingConstsReady = true
 }
 
 // wbaesBlockTbox computes one WB-AES block using extracted T-box tables.

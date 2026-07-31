@@ -44,8 +44,9 @@ var GpFoldConstants = [9][4]uint32{
 // FinalizeSpan7 assembles the 20-byte span7 output from the captured round outputs.
 //
 // The span7 structure is:
-//   span7[0:4]  = byte_subst(xor_fold(bswap(R8) ⊕ Σ(bswap(Ri) ⊕ GP[i])))[0:4]
-//   span7[4:20] = R19_raw (direct copy, 16 bytes)
+//
+//	span7[0:4]  = byte_subst(xor_fold(bswap(R8) ⊕ Σ(bswap(Ri) ⊕ GP[i])))[0:4]
+//	span7[4:20] = R19_raw (direct copy, 16 bytes)
 //
 // Where:
 //   - R8, R19 are the raw RoundC outputs for rounds 8 and 19

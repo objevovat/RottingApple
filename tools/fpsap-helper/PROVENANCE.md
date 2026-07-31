@@ -8,7 +8,7 @@
 | stage | package | what it does |
 |---|---|---|
 | Phase 1 | `internal/fpbridge` | white-box AES over the 128-byte payload → a 128-byte GP buffer |
-| Bridge | `internal/layera`, `layerb`, `layerc` | nine MD5-family blocks over that buffer → a 20-byte digest |
+| Bridge | `internal/fpsapcore` | nine MD5-family blocks over that buffer → a 20-byte digest |
 | Phase 2 | `internal/fairplayhash` | the white-box MD5 network → the 20-byte response |
 
 ## What was removed
@@ -38,9 +38,8 @@ here.
 No Apple instruction is executed or reproduced. There is no interpreter, no
 instruction dispatch, and no image of Apple's binary.
 
-**No Apple addresses either.** The generated code carries none — not as folded
-constants, not as data spilled into scratch memory, not as pointers inside the
-baked tables. `internal/layerguard` fails the build if one returns.
+**No Apple addresses either.** None survive as folded constants, as data spilled
+into scratch memory, or as pointers inside the tables.
 
 That is worth spelling out because an earlier draft of this file claimed the
 opposite: that "79 code-segment addresses survive as constants because the
@@ -56,35 +55,36 @@ What genuinely remains is **data**, as it must for white-box cryptography, where
 the key is dissolved into lookup tables so the tables *are* the cipher:
 
 - the white-box AES T-boxes in `internal/fpbridge`
-- ~119 KB of constant table pages across the layer packages, four 4 KB pages per
-  generated file
+- the Phase-2 network's constant tables in `internal/fairplayhash`
 
-Whole pages are carried rather than the entries one trace happened to touch,
-because some read indices are payload-dependent. A byte-level sweep puts 21 of
-each 16 KB image in demonstrable use; the rest is a deliberate hedge, not proven
-necessary and not proven unnecessary.
+The bridge no longer carries any table data at all — that was the part reduced
+to a closed form.
 
 So: **blob-free, not snapshot-free.** No Apple binary, no interpreter, no build
 tag, no addresses — but constant tables and a small constant memory image.
 
 ## Size
 
-The generated layer packages are large: roughly **8.1 MB** of Go, against the
-~1.07 MB of interpreter and snapshot they replace. They are machine-generated
-straight-line code produced by partial evaluation of an execution trace, not a
-compact algorithm — `layerc.EncodeX9` alone is ~81,000 statements, and nobody can
-currently read it and explain what the encoding does.
+**300 KB**, against the ~1.07 MB of interpreter and snapshot it replaces. The
+built helper binary also shrinks, 2.96 MB to 2.55 MB.
 
-That figure was 17 MB when this PR was opened. Three passes in the generator have
-since taken it down: removing Apple's address space, re-encoding the emitted
-shapes (byte-at-a-time memory access became word operations; the 32-bit
-arithmetic, which arrived as nested casts at ~200,000 sites, is now named), and
-eliminating register writes whose results are never read (25% of statements).
-None changed a single output byte.
+An earlier revision of this PR was 8.1 MB and argued the trade was "provenance
+for bulk" — you carry more code, but none of it is Apple's. That framing is
+obsolete. The bridge was machine-generated straight-line code then, produced by
+partial evaluation of an execution trace; it has since been reduced to a closed
+form. `internal/fpsapcore` is now **697 lines of ordinary byte arithmetic**:
 
-Reducing this to closed form remains unfinished work. The trade being offered is
-still **provenance for bulk**, and it should be evaluated on those terms — the
-bulk is simply a good deal smaller than it was.
+| file | lines | what it is |
+|---|---|---|
+| `fairplay_sap.go` | 235 | ring diffusion, nonlinear circuit, fold, final scramble |
+| `fairplay_md5.go` | 120 | the MD5-family compression and its mutations |
+| `scramble.go` | 85 | the scramble collapsed to a GF(2) matrix |
+| `descriptor.go` | 61 | the 5-block descriptor |
+| `fast.go`, `ring.go` | 94 | optional prefix folding and index tabulation |
+| `bridge.go` | 38 | `gp ^ 0x0f` and the word swap |
+
+So there is no longer a size argument against this change. It is smaller than
+what it replaces, and the parts that are not constant tables can be read.
 
 ## Verification
 
@@ -93,12 +93,9 @@ bulk is simply a good deal smaller than it was.
   `omarroth/doubletake` — that compute this exchange by emulating Apple's
   binary, so agreement is independent of the reverse engineering behind this
   code
-- 287/287 differential comparisons against the interpreter this replaces,
-  including 250 random payloads and 30 full 142-byte m2 messages, run before the
-  interpreter was deleted and re-run after every size pass
-- `internal/layerguard`: a digest over all eight generated functions across 512
-  payloads, pinned to the value recorded before any of the size work, plus the
-  no-Apple-addresses check
+- 347/347 differential comparisons against the interpreter this replaces,
+  including 300 random payloads and 40 full 142-byte m2 messages, driven end to
+  end through both helper binaries
 
 The reverse engineering behind this was done in a separate codebase that is not
 currently published. Everything needed to check this code is in this directory:

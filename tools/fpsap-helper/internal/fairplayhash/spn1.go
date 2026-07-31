@@ -47,7 +47,9 @@ func beRoundOutput(s [4]uint32) (o [16]byte) {
 }
 
 // ApplyMixColumns applies SPN#1's full GF(2)-affine MixColumns (all 4 columns).
-func ApplyMixColumns(in [16]byte) [16]byte {
+// applyMixColumnsReference is the direct bit-by-bit reading of the matrix,
+// kept as the oracle TestMixColumnsFastEquivalent checks the fast path against.
+func applyMixColumnsReference(in [16]byte) [16]byte {
 	var out [16]byte
 	for ob := 0; ob < 128; ob++ {
 		var acc byte

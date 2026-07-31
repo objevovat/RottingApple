@@ -77,10 +77,12 @@ var RorAmounts = [64]uint{
 // MsgSchedule is the standard MD5 message word schedule.
 // All 4 groups use standard MD5 indexing, verified against ARM64 instruction
 // stream extraction (LDR [SP, #offset] patterns match standard k formulas):
-//   Group 0 (F): k = i
-//   Group 1 (G): k = (5i + 1) mod 16
-//   Group 2 (H): k = (3i + 5) mod 16
-//   Group 3 (I): k = (7i) mod 16
+//
+//	Group 0 (F): k = i
+//	Group 1 (G): k = (5i + 1) mod 16
+//	Group 2 (H): k = (3i + 5) mod 16
+//	Group 3 (I): k = (7i) mod 16
+//
 // The WB-MD5 applies a state-dependent hidden-word permutation at the
 // Group 1→2 boundary, but the schedule indices themselves are standard.
 var MsgSchedule = [64]int{
@@ -97,91 +99,6 @@ var MsgSchedule = [64]int{
 // The bijection is XOR-based (modConst = 2*outBias → f(x) = x ^ outBias).
 // State words are encoded via XOR with outBias after each round's bijection step.
 // Round 17 has an anomalous extra outBias[encRound_of_a] correction.
-func RoundC_WBMD5(state *[4]uint32, msg *[16]uint32) {
-	a, b, c, d := state[0], state[1], state[2], state[3]
-
-	// encRound tracks which round's outBias encodes each state word.
-	// Initial state is raw (unencoded), so encRound = -1.
-	aEnc, bEnc, cEnc, dEnc := -1, -1, -1, -1
-
-	for i := 0; i < 64; i++ {
-		// Decode state words (XOR with outBias of encoding round)
-		aDec := a
-		if aEnc >= 0 {
-			aDec = a ^ OutBiases[aEnc]
-		}
-		bDec := b
-		if bEnc >= 0 {
-			bDec = b ^ OutBiases[bEnc]
-		}
-		cDec := c
-		if cEnc >= 0 {
-			cDec = c ^ OutBiases[cEnc]
-		}
-		dDec := d
-		if dEnc >= 0 {
-			dDec = d ^ OutBiases[dEnc]
-		}
-
-		// Standard MD5 F-function variants
-		var f uint32
-		switch i >> 4 {
-		case 0:
-			f = dDec ^ (bDec & (cDec ^ dDec))
-		case 1:
-			f = cDec ^ (dDec & (bDec ^ cDec))
-		case 2:
-			f = bDec ^ cDec ^ dDec
-		case 3:
-			f = cDec ^ (bDec | ^dDec)
-		}
-
-		// Accumulate: a_decoded + hidden[schedule[i]] + f + addConst
-		aFull := aDec + msg[MsgSchedule[i]]
-		if i == 17 && aEnc >= 0 {
-			aFull += OutBiases[aEnc] // Round 17 anomaly correction
-		}
-		tmp := aFull + f + AddConsts[i]
-
-		// Rotate right (ROR)
-		tmp = bits.RotateLeft32(tmp, -int(RorAmounts[i]))
-
-		// Add decoded b
-		postAddB := tmp + bDec
-
-		// Affine bijection encoding: enc = postAddB ^ outBias[i]
-		newB := postAddB - (ModConsts[i] & (postAddB << 1)) + OutBiases[i]
-
-		// Shift state with encoding tracking
-		a, b, c, d = d, newB, b, c
-		aEnc, bEnc, cEnc, dEnc = dEnc, i, bEnc, cEnc
-	}
-
-	// Decode the final a,b,c,d from their affine bijection encodings
-	// before the standard MD5 accumulation step.
-	if aEnc >= 0 {
-		a ^= OutBiases[aEnc]
-	}
-	if bEnc >= 0 {
-		b ^= OutBiases[bEnc]
-	}
-	if cEnc >= 0 {
-		c ^= OutBiases[cEnc]
-	}
-	if dEnc >= 0 {
-		d ^= OutBiases[dEnc]
-	}
-
-	// Standard MD5 accumulation
-	state[0] += a
-	state[1] += b
-	state[2] += c
-	state[3] += d
-}
-
-// RoundC_WBMD5_Permuted performs WB-MD5 with separate hidden word arrays.
-// hiddenG0 provides words for sub-rounds 0-31 (groups 0-1).
-// hiddenG2 provides words for sub-rounds 32-63 (groups 2-3, after NEON permutation).
 // This is the canonical form matching the ARM64 implementation.
 func RoundC_WBMD5_Permuted(state *[4]uint32, hiddenG0, hiddenG2 *[16]uint32) {
 	a, b, c, d := state[0], state[1], state[2], state[3]

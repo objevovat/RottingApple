@@ -12,7 +12,6 @@ package fpbridge
 // The signature and outputs are unchanged, and the two implementations were
 // cross-checked against each other before the old one was removed.
 func FPBridgeZeroBlob(payload [128]byte) (vreg0 [2]uint64, x9Data [64]byte) {
-	x9 := bridgeX9Data(wbaesFullPhase1(payload))
-	copy(x9Data[:], x9)
-	return bridgeNeonState(x9).Vreg0, x9Data
+	x9Data = bridgeX9DataClosed(wbaesFullPhase1(payload))
+	return bridgeNeonState(x9Data[:]).Vreg0, x9Data
 }

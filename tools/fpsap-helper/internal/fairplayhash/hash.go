@@ -36,12 +36,14 @@ type HashTrace struct {
 // This replaces 78,874 ARM64 interpreter instructions with native Go.
 //
 // The Phase 2 hash is a 20-round ARX block cipher:
-//   Setup → (RoundC → RoundA_short → Setup → RoundB → RoundA_long → Finalize) × 20
+//
+//	Setup → (RoundC → RoundA_short → Setup → RoundB → RoundA_long → Finalize) × 20
 //
 // Where:
-//   RoundC = White-Box MD5 (64 sub-rounds, affine bijection encoding)
-//   RoundA = bswap32 on state words
-//   RoundB = T-box constant expansion (15 XOR iterations per round)
+//
+//	RoundC = White-Box MD5 (64 sub-rounds, affine bijection encoding)
+//	RoundA = bswap32 on state words
+//	RoundB = T-box constant expansion (15 XOR iterations per round)
 //
 // Parameters:
 //   - state: HashState with Mem sliced to start at SP (SP-relative offsets)
@@ -297,7 +299,6 @@ func ComputeHashLegacy(state *HashState) {
 	}
 }
 
-
 // roundC_withPermutedHidden performs WB-MD5 with separate hidden word arrays
 // for groups 0-1 (original) and groups 2-3 (after permutation).
 func roundC_withPermutedHidden(state *[4]uint32, hiddenG0, hiddenG2 *[16]uint32) {
@@ -471,11 +472,11 @@ type HashState struct {
 // Constants for state layout (SP-relative byte offsets).
 // These will be populated by the extraction test.
 const (
-	HiddenWordsOffset = 0     // SP+0: 16 hidden words (64 bytes)
-	RoundAShortOffset = 3184  // SP+3184: bswap target (short, 4 words)
-	RoundAShortCount  = 4     // 4 words for short bswap
-	RoundALongOffset  = 3208  // SP+3208: bswap target (long, 14 words)
-	RoundALongCount   = 14    // 14 words for long bswap
+	HiddenWordsOffset  = 0    // SP+0: 16 hidden words (64 bytes)
+	RoundAShortOffset  = 3184 // SP+3184: bswap target (short, 4 words)
+	RoundAShortCount   = 4    // 4 words for short bswap
+	RoundALongOffset   = 3208 // SP+3208: bswap target (long, 14 words)
+	RoundALongCount    = 14   // 14 words for long bswap
 	RoundBTargetOffset = 3056 // SP+3056: T-box target area (15 words)
 )
 
@@ -488,9 +489,11 @@ var round8InitialState = [4]uint32{0xb9f3dcdc, 0xfbdc740b, 0x60f77f86, 0x5190721
 // RoundMsgAreaOffset maps round number to SP-relative byte offset of the msg area.
 // Base msg area: 0x707fed70 (SP+0xD20 = SP+3360)
 // Three non-default rounds:
-//   Round 8: 0x707fee40 (SP+0xDF0 = SP+3568, +208 from base)
-//   Round 9: 0x707fed18 (SP+0xCC8 = SP+3272, -88 from base)
-//   Round 19: 0x707fee40 (SP+0xDF0 = SP+3568, +208 from base)
+//
+//	Round 8: 0x707fee40 (SP+0xDF0 = SP+3568, +208 from base)
+//	Round 9: 0x707fed18 (SP+0xCC8 = SP+3272, -88 from base)
+//	Round 19: 0x707fee40 (SP+0xDF0 = SP+3568, +208 from base)
+//
 // Verified by preamble-split parity test against ARM64 emulator trace.
 var RoundMsgAreaOffset = [20]int{
 	3360, 3360, 3360, 3360, // rounds 0-3

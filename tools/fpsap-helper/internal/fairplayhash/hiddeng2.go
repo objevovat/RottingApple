@@ -12,28 +12,15 @@ package fairplayhash
 // word[5] which contains a per-round counter 0xNN2d45e8 (NN increments each round).
 // Rounds 8, 9, and 19 have completely different HW1 values due to anomalous
 // SP shifts and nested function call handling.
-var HiddenWordsG0 = [20][16]uint32{
-	{0xbf0e0289, 0x3f24412d, 0xb50e86f8, 0xbf86d070, 0xf07a5898, 0x422d45e8, 0x0cb468c9, 0x99f1949c, 0x10941d83, 0xc0d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x60d86cfa, 0x40d56cfa}, // Round 0
-	{0xbf0e0289, 0x3f24412d, 0xb50e86f8, 0xbf86d070, 0xf07a5898, 0x432d45e8, 0x0cb468c9, 0x99f1949c, 0x10941d83, 0xc0d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x60d86cfa, 0x40d56cfa}, // Round 1
-	{0xbf0e0289, 0x3f24412d, 0xb50e86f8, 0xbf86d070, 0xf07a5898, 0x442d45e8, 0x0cb468c9, 0x99f1949c, 0x10941d83, 0xc0d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x60d86cfa, 0x40d56cfa}, // Round 2
-	{0xbf0e0289, 0x3f24412d, 0xb50e86f8, 0xbf86d070, 0xf07a5898, 0x452d45e8, 0x0cb468c9, 0x99f1949c, 0x10941d83, 0xc0d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x60d86cfa, 0x40d56cfa}, // Round 3
-	{0xbf0e0289, 0x3f24412d, 0xb50e86f8, 0xbf86d070, 0xf07a5898, 0x462d45e8, 0x0cb468c9, 0x99f1949c, 0x10941d83, 0xc0d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x60d86cfa, 0x40d56cfa}, // Round 4
-	{0xbf0e0289, 0x3f24412d, 0xb50e86f8, 0xbf86d070, 0xf07a5898, 0x472d45e8, 0x0cb468c9, 0x99f1949c, 0x10941d83, 0xc0d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x60d86cfa, 0x40d56cfa}, // Round 5
-	{0xbf0e0289, 0x3f24412d, 0xb50e86f8, 0xbf86d070, 0xf07a5898, 0x482d45e8, 0x0cb468c9, 0x99f1949c, 0x10941d83, 0xc0d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x60d86cfa, 0x40d56cfa}, // Round 6
-	{0xbf0e0289, 0x3f24412d, 0xb50e86f8, 0xbf86d070, 0xf07a5898, 0x492d45e8, 0x0cb468c9, 0x99f1949c, 0x10941d83, 0xc0d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x60d86cfa, 0x40d56cfa}, // Round 7
-	{0xd64d24f3, 0xa6e053b7, 0x1775118b, 0x682b0a7c, 0xf097989a, 0x8ac569f5, 0x3f3d1958, 0xffcc68c5, 0xc0d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d66cfa, 0x40d56cfa}, // Round 8
-	{0x5f232e79, 0x20dfa5f0, 0x09a7ff16, 0x0450f3fb, 0xf097989a, 0x8ac569f5, 0xefbeadde, 0xbebafeca, 0xda81a3c4, 0xffffffff, 0x257e5c3c, 0x00000000, 0x06efc487, 0x00000000, 0x00000024, 0x00000000}, // Round 9
-	{0xbf0e0289, 0x3f24412d, 0xb50e86f8, 0xbf86d070, 0xf07a5898, 0x412d45e8, 0x0cb468c9, 0x99f1949c, 0x10941d83, 0xc0d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x60d86cfa, 0x40d56cfa}, // Round 10
-	{0xbf0e0289, 0x3f24412d, 0xb50e86f8, 0xbf86d070, 0xf07a5898, 0x422d45e8, 0x0cb468c9, 0x99f1949c, 0x10941d83, 0xc0d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x60d86cfa, 0x40d56cfa}, // Round 11
-	{0xbf0e0289, 0x3f24412d, 0xb50e86f8, 0xbf86d070, 0xf07a5898, 0x432d45e8, 0x0cb468c9, 0x99f1949c, 0x10941d83, 0xc0d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x60d86cfa, 0x40d56cfa}, // Round 12
-	{0xbf0e0289, 0x3f24412d, 0xb50e86f8, 0xbf86d070, 0xf07a5898, 0x442d45e8, 0x0cb468c9, 0x99f1949c, 0x10941d83, 0xc0d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x60d86cfa, 0x40d56cfa}, // Round 13
-	{0xbf0e0289, 0x3f24412d, 0xb50e86f8, 0xbf86d070, 0xf07a5898, 0x452d45e8, 0x0cb468c9, 0x99f1949c, 0x10941d83, 0xc0d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x60d86cfa, 0x40d56cfa}, // Round 14
-	{0xbf0e0289, 0x3f24412d, 0xb50e86f8, 0xbf86d070, 0xf07a5898, 0x462d45e8, 0x0cb468c9, 0x99f1949c, 0x10941d83, 0xc0d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x60d86cfa, 0x40d56cfa}, // Round 15
-	{0xbf0e0289, 0x3f24412d, 0xb50e86f8, 0xbf86d070, 0xf07a5898, 0x472d45e8, 0x0cb468c9, 0x99f1949c, 0x10941d83, 0xc0d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x60d86cfa, 0x40d56cfa}, // Round 16
-	{0xbf0e0289, 0x3f24412d, 0xb50e86f8, 0xbf86d070, 0xf07a5898, 0x482d45e8, 0x0cb468c9, 0x99f1949c, 0x10941d83, 0xc0d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x60d86cfa, 0x40d56cfa}, // Round 17
-	{0xbf0e0289, 0x3f24412d, 0xb50e86f8, 0xbf86d070, 0xf07a5898, 0x492d45e8, 0x0cb468c9, 0x99f1949c, 0x10941d83, 0xc0d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x60d86cfa, 0x40d56cfa}, // Round 18
-	{0x2c8fffd1, 0x546e6e8d, 0xe3c51ef6, 0x6e496819, 0xb037e25f, 0xb4e8b238, 0x467fb21a, 0xb1885ec5, 0xc0d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d66cfa, 0x40d56cfa}, // Round 19
-}
+// HiddenWordsG0 holds 20 rows of 16 words, but 19 of them are the first row with a
+// handful of words replaced -- the shared hidden-word set the rounds differ
+// within. Stored as row 0 plus per-row (index, value) patches: 348 bytes rather
+// than 1,280.
+var HiddenWordsG0 = unpackHiddenWords(HiddenWordsG0Base, HiddenWordsG0Patch)
+
+const HiddenWordsG0Base = "\x89\x02\x0e\xbf-A$?\xf8\x86\x0e\xb5p\xd0\x86\xbf\x98Xz\xf0\xe8E-B\xc9h\xb4\f\x9c\x94\xf1\x99\x83\x1d\x94\x10\xfal\xd5\xc0\xfal\xd5@\xfal\xd5@\xfal\xd5@\xfal\xd5@\xfal\xd8`\xfal\xd5@"
+
+const HiddenWordsG0Patch = "\x01\x05\xe8E-C\x01\x05\xe8E-D\x01\x05\xe8E-E\x01\x05\xe8E-F\x01\x05\xe8E-G\x01\x05\xe8E-H\x01\x05\xe8E-I\v\x00\xf3$M\xd6\x01\xb7S\xe0\xa6\x02\x8b\x11u\x17\x03|\n+h\x04\x9a\x98\x97\xf0\x05\xf5i\xc5\x8a\x06X\x19=?\a\xc5h\xcc\xff\b\xfal\xd5\xc0\t\xfal\xd5@\x0e\xfal\xd6@\x10\x00y.#_\x01\xf0\xa5\xdf \x02\x16\xff\xa7\t\x03\xfb\xf3P\x04\x04\x9a\x98\x97\xf0\x05\xf5i\xc5\x8a\x06\xde\xad\xbe\xef\a\xca\xfe\xba\xbe\b\xc4\xa3\x81\xda\t\xff\xff\xff\xff\n<\\~%\v\x00\x00\x00\x00\f\x87\xc4\xef\x06\r\x00\x00\x00\x00\x0e$\x00\x00\x00\x0f\x00\x00\x00\x00\x01\x05\xe8E-A\x00\x01\x05\xe8E-C\x01\x05\xe8E-D\x01\x05\xe8E-E\x01\x05\xe8E-F\x01\x05\xe8E-G\x01\x05\xe8E-H\x01\x05\xe8E-I\v\x00\xd1\xff\x8f,\x01\x8dnnT\x02\xf6\x1e\xc5\xe3\x03\x19hIn\x04_\xe27\xb0\x058\xb2\xe8\xb4\x06\x1a\xb2\x7fF\a\xc5^\x88\xb1\b\xfal\xd5\xc0\t\xfal\xd5@\x0e\xfal\xd6@"
 
 // HiddenWordsG2 contains the 16 hidden words used for groups 2-3 (sub-rounds 32-63)
 // of the WB-MD5 compress function, for each of the 20 rounds.
@@ -42,25 +29,32 @@ var HiddenWordsG0 = [20][16]uint32{
 // NEON permutation that occurs mid-way through each RoundC basic block).
 // They differ from G0 because the NEON ops shuffle the hidden word array
 // between groups 0-1 and groups 2-3.
-var HiddenWordsG2 = [20][16]uint32{
-	{0xbf86d070, 0x40d56cfa, 0x40d56cfa, 0x422d45e8, 0x99f1949c, 0x60d86cfa, 0xb50e86f8, 0x40d56cfa, 0x10941d83, 0xc0d56cfa, 0xf07a5898, 0x3f24412d, 0x40d56cfa, 0x0cb468c9, 0xbf0e0289, 0x40d56cfa}, // Round 0
-	{0xbf0e0289, 0x40d56cfa, 0x40d56cfa, 0x432d45e8, 0x0cb468c9, 0xbf86d070, 0x10941d83, 0xf07a5898, 0x99f1949c, 0xc0d56cfa, 0x3f24412d, 0x40d56cfa, 0x40d56cfa, 0xb50e86f8, 0x60d86cfa, 0x40d56cfa}, // Round 1
-	{0xf07a5898, 0xbf86d070, 0x40d56cfa, 0xb50e86f8, 0x99f1949c, 0x0cb468c9, 0x40d56cfa, 0x60d86cfa, 0x10941d83, 0xc0d56cfa, 0x40d56cfa, 0x40d56cfa, 0x3f24412d, 0x40d56cfa, 0xbf0e0289, 0x442d45e8}, // Round 2
-	{0xbf0e0289, 0xbf86d070, 0x10941d83, 0x3f24412d, 0xf07a5898, 0x99f1949c, 0x40d56cfa, 0x40d56cfa, 0xb50e86f8, 0xc0d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x452d45e8, 0x60d86cfa, 0x0cb468c9}, // Round 3
-	{0x40d56cfa, 0x3f24412d, 0x0cb468c9, 0x10941d83, 0x40d56cfa, 0x462d45e8, 0xb50e86f8, 0x40d56cfa, 0xbf86d070, 0xc0d56cfa, 0x40d56cfa, 0x99f1949c, 0xbf0e0289, 0x40d56cfa, 0x60d86cfa, 0xf07a5898}, // Round 4
-	{0x60d86cfa, 0xf07a5898, 0x472d45e8, 0x40d56cfa, 0xbf86d070, 0xc0d56cfa, 0x99f1949c, 0x3f24412d, 0x10941d83, 0xb50e86f8, 0x0cb468c9, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0xbf0e0289, 0x40d56cfa}, // Round 5
-	{0x0cb468c9, 0xf07a5898, 0xc0d56cfa, 0xb50e86f8, 0x99f1949c, 0xbf86d070, 0x40d56cfa, 0x40d56cfa, 0x10941d83, 0x482d45e8, 0x40d56cfa, 0x40d56cfa, 0x3f24412d, 0xbf0e0289, 0x60d86cfa, 0x40d56cfa}, // Round 6
-	{0xb50e86f8, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0xbf86d070, 0xf07a5898, 0x99f1949c, 0xbf0e0289, 0x10941d83, 0xc0d56cfa, 0x492d45e8, 0x3f24412d, 0x40d56cfa, 0x0cb468c9, 0x60d86cfa, 0x40d56cfa}, // Round 7
-	{0xa6e053b7, 0xffcc68c5, 0x1775118b, 0x682b0a7c, 0xf097989a, 0x8ac569f5, 0xd64d24f3, 0x3f3d1958, 0xc0d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d66cfa, 0x40d56cfa}, // Round 8
-	{0x2b958466, 0x815fe149, 0x09a7ff16, 0x0450f3fb, 0xf097989a, 0x8ac569f5, 0xefbeadde, 0xbebafeca, 0xda81a3c4, 0xffffffff, 0x257e5c3c, 0x00000000, 0x06efc487, 0x00000000, 0x00000024, 0x00000000}, // Round 9
-	{0x40d56cfa, 0xbf86d070, 0x60d86cfa, 0x412d45e8, 0x99f1949c, 0xc0d56cfa, 0x10941d83, 0xf07a5898, 0x0cb468c9, 0x3f24412d, 0x40d56cfa, 0xbf0e0289, 0x40d56cfa, 0x40d56cfa, 0xb50e86f8, 0x40d56cfa}, // Round 10
-	{0xbf86d070, 0x40d56cfa, 0x40d56cfa, 0x422d45e8, 0x99f1949c, 0x60d86cfa, 0xb50e86f8, 0x40d56cfa, 0x10941d83, 0xc0d56cfa, 0xf07a5898, 0x3f24412d, 0x40d56cfa, 0x0cb468c9, 0xbf0e0289, 0x40d56cfa}, // Round 11
-	{0xbf0e0289, 0x40d56cfa, 0x40d56cfa, 0x432d45e8, 0x0cb468c9, 0xbf86d070, 0x10941d83, 0xf07a5898, 0x99f1949c, 0xc0d56cfa, 0x3f24412d, 0x40d56cfa, 0x40d56cfa, 0xb50e86f8, 0x60d86cfa, 0x40d56cfa}, // Round 12
-	{0xf07a5898, 0xbf86d070, 0x40d56cfa, 0xb50e86f8, 0x99f1949c, 0x0cb468c9, 0x40d56cfa, 0x60d86cfa, 0x10941d83, 0xc0d56cfa, 0x40d56cfa, 0x40d56cfa, 0x3f24412d, 0x40d56cfa, 0xbf0e0289, 0x442d45e8}, // Round 13
-	{0xbf0e0289, 0xbf86d070, 0x10941d83, 0x3f24412d, 0xf07a5898, 0x99f1949c, 0x40d56cfa, 0x40d56cfa, 0xb50e86f8, 0xc0d56cfa, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0x452d45e8, 0x60d86cfa, 0x0cb468c9}, // Round 14
-	{0x40d56cfa, 0x3f24412d, 0x0cb468c9, 0x10941d83, 0x40d56cfa, 0x462d45e8, 0xb50e86f8, 0x40d56cfa, 0xbf86d070, 0xc0d56cfa, 0x40d56cfa, 0x99f1949c, 0xbf0e0289, 0x40d56cfa, 0x60d86cfa, 0xf07a5898}, // Round 15
-	{0x60d86cfa, 0xf07a5898, 0x472d45e8, 0x40d56cfa, 0xbf86d070, 0xc0d56cfa, 0x99f1949c, 0x3f24412d, 0x10941d83, 0xb50e86f8, 0x0cb468c9, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0xbf0e0289, 0x40d56cfa}, // Round 16
-	{0x0cb468c9, 0xf07a5898, 0xc0d56cfa, 0xb50e86f8, 0x99f1949c, 0xbf86d070, 0x40d56cfa, 0x40d56cfa, 0x10941d83, 0x482d45e8, 0x40d56cfa, 0x40d56cfa, 0x3f24412d, 0xbf0e0289, 0x60d86cfa, 0x40d56cfa}, // Round 17
-	{0xb50e86f8, 0x40d56cfa, 0x40d56cfa, 0x40d56cfa, 0xbf86d070, 0xf07a5898, 0x99f1949c, 0xbf0e0289, 0x10941d83, 0xc0d56cfa, 0x492d45e8, 0x3f24412d, 0x40d56cfa, 0x0cb468c9, 0x60d86cfa, 0x40d56cfa}, // Round 18
-	{0xe3c51ef6, 0x2c8fffd1, 0x467fb21a, 0x546e6e8d, 0x40d66cfa, 0x40d56cfa, 0x6e496819, 0x40d56cfa, 0xc0d56cfa, 0xb1885ec5, 0x40d56cfa, 0xb4e8b238, 0x40d56cfa, 0x40d56cfa, 0xb037e25f, 0x40d56cfa}, // Round 19
+// HiddenWordsG2 holds 20 rows of 16 words, but 19 of them are the first row with a
+// handful of words replaced -- the shared hidden-word set the rounds differ
+// within. Stored as row 0 plus per-row (index, value) patches: 1163 bytes rather
+// than 1,280.
+var HiddenWordsG2 = unpackHiddenWords(HiddenWordsG2Base, HiddenWordsG2Patch)
+
+const HiddenWordsG2Base = "p\xd0\x86\xbf\xfal\xd5@\xfal\xd5@\xe8E-B\x9c\x94\xf1\x99\xfal\xd8`\xf8\x86\x0e\xb5\xfal\xd5@\x83\x1d\x94\x10\xfal\xd5\xc0\x98Xz\xf0-A$?\xfal\xd5@\xc9h\xb4\f\x89\x02\x0e\xbf\xfal\xd5@"
+
+const HiddenWordsG2Patch = "\v\x00\x89\x02\x0e\xbf\x03\xe8E-C\x04\xc9h\xb4\f\x05p\xd0\x86\xbf\x06\x83\x1d\x94\x10\a\x98Xz\xf0\b\x9c\x94\xf1\x99\n-A$?\v\xfal\xd5@\r\xf8\x86\x0e\xb5\x0e\xfal\xd8`\v\x00\x98Xz\xf0\x01p\xd0\x86\xbf\x03\xf8\x86\x0e\xb5\x05\xc9h\xb4\f\x06\xfal\xd5@\a\xfal\xd8`\n\xfal\xd5@\v\xfal\xd5@\f-A$?\r\xfal\xd5@\x0f\xe8E-D\r\x00\x89\x02\x0e\xbf\x01p\xd0\x86\xbf\x02\x83\x1d\x94\x10\x03-A$?\x04\x98Xz\xf0\x05\x9c\x94\xf1\x99\x06\xfal\xd5@\b\xf8\x86\x0e\xb5\n\xfal\xd5@\v\xfal\xd5@\r\xe8E-E\x0e\xfal\xd8`\x0f\xc9h\xb4\f\r\x00\xfal\xd5@\x01-A$?\x02\xc9h\xb4\f\x03\x83\x1d\x94\x10\x04\xfal\xd5@\x05\xe8E-F\bp\xd0\x86\xbf\n\xfal\xd5@\v\x9c\x94\xf1\x99\f\x89\x02\x0e\xbf\r\xfal\xd5@\x0e\xfal\xd8`\x0f\x98Xz\xf0\f\x00\xfal\xd8`\x01\x98Xz\xf0\x02\xe8E-G\x03\xfal\xd5@\x04p\xd0\x86\xbf\x05\xfal\xd5\xc0\x06\x9c\x94\xf1\x99\a-A$?\t\xf8\x86\x0e\xb5\n\xc9h\xb4\f\v\xfal\xd5@\r\xfal\xd5@\f\x00\xc9h\xb4\f\x01\x98Xz\xf0\x02\xfal\xd5\xc0\x03\xf8\x86\x0e\xb5\x05p\xd0\x86\xbf\x06\xfal\xd5@\t\xe8E-H\n\xfal\xd5@\v\xfal\xd5@\f-A$?\r\x89\x02\x0e\xbf\x0e\xfal\xd8`\b\x00\xf8\x86\x0e\xb5\x03\xfal\xd5@\x04p\xd0\x86\xbf\x05\x98Xz\xf0\x06\x9c\x94\xf1\x99\a\x89\x02\x0e\xbf\n\xe8E-I\x0e\xfal\xd8`\x0e\x00\xb7S\xe0\xa6\x01\xc5h\xcc\xff\x02\x8b\x11u\x17\x03|\n+h\x04\x9a\x98\x97\xf0\x05\xf5i\xc5\x8a\x06\xf3$M\xd6\aX\x19=?\b\xfal\xd5\xc0\t\xfal\xd5@\n\xfal\xd5@\v\xfal\xd5@\r\xfal\xd5@\x0e\xfal\xd6@\x10\x00f\x84\x95+\x01I\xe1_\x81\x02\x16\xff\xa7\t\x03\xfb\xf3P\x04\x04\x9a\x98\x97\xf0\x05\xf5i\xc5\x8a\x06\xde\xad\xbe\xef\a\xca\xfe\xba\xbe\b\xc4\xa3\x81\xda\t\xff\xff\xff\xff\n<\\~%\v\x00\x00\x00\x00\f\x87\xc4\xef\x06\r\x00\x00\x00\x00\x0e$\x00\x00\x00\x0f\x00\x00\x00\x00\r\x00\xfal\xd5@\x01p\xd0\x86\xbf\x02\xfal\xd8`\x03\xe8E-A\x05\xfal\xd5\xc0\x06\x83\x1d\x94\x10\a\x98Xz\xf0\b\xc9h\xb4\f\t-A$?\n\xfal\xd5@\v\x89\x02\x0e\xbf\r\xfal\xd5@\x0e\xf8\x86\x0e\xb5\x00\v\x00\x89\x02\x0e\xbf\x03\xe8E-C\x04\xc9h\xb4\f\x05p\xd0\x86\xbf\x06\x83\x1d\x94\x10\a\x98Xz\xf0\b\x9c\x94\xf1\x99\n-A$?\v\xfal\xd5@\r\xf8\x86\x0e\xb5\x0e\xfal\xd8`\v\x00\x98Xz\xf0\x01p\xd0\x86\xbf\x03\xf8\x86\x0e\xb5\x05\xc9h\xb4\f\x06\xfal\xd5@\a\xfal\xd8`\n\xfal\xd5@\v\xfal\xd5@\f-A$?\r\xfal\xd5@\x0f\xe8E-D\r\x00\x89\x02\x0e\xbf\x01p\xd0\x86\xbf\x02\x83\x1d\x94\x10\x03-A$?\x04\x98Xz\xf0\x05\x9c\x94\xf1\x99\x06\xfal\xd5@\b\xf8\x86\x0e\xb5\n\xfal\xd5@\v\xfal\xd5@\r\xe8E-E\x0e\xfal\xd8`\x0f\xc9h\xb4\f\r\x00\xfal\xd5@\x01-A$?\x02\xc9h\xb4\f\x03\x83\x1d\x94\x10\x04\xfal\xd5@\x05\xe8E-F\bp\xd0\x86\xbf\n\xfal\xd5@\v\x9c\x94\xf1\x99\f\x89\x02\x0e\xbf\r\xfal\xd5@\x0e\xfal\xd8`\x0f\x98Xz\xf0\f\x00\xfal\xd8`\x01\x98Xz\xf0\x02\xe8E-G\x03\xfal\xd5@\x04p\xd0\x86\xbf\x05\xfal\xd5\xc0\x06\x9c\x94\xf1\x99\a-A$?\t\xf8\x86\x0e\xb5\n\xc9h\xb4\f\v\xfal\xd5@\r\xfal\xd5@\f\x00\xc9h\xb4\f\x01\x98Xz\xf0\x02\xfal\xd5\xc0\x03\xf8\x86\x0e\xb5\x05p\xd0\x86\xbf\x06\xfal\xd5@\t\xe8E-H\n\xfal\xd5@\v\xfal\xd5@\f-A$?\r\x89\x02\x0e\xbf\x0e\xfal\xd8`\b\x00\xf8\x86\x0e\xb5\x03\xfal\xd5@\x04p\xd0\x86\xbf\x05\x98Xz\xf0\x06\x9c\x94\xf1\x99\a\x89\x02\x0e\xbf\n\xe8E-I\x0e\xfal\xd8`\r\x00\xf6\x1e\xc5\xe3\x01\xd1\xff\x8f,\x02\x1a\xb2\x7fF\x03\x8dnnT\x04\xfal\xd6@\x05\xfal\xd5@\x06\x19hIn\b\xfal\xd5\xc0\t\xc5^\x88\xb1\n\xfal\xd5@\v8\xb2\xe8\xb4\r\xfal\xd5@\x0e_\xe27\xb0"
+
+// unpackHiddenWords rebuilds the 20x16 word table from row 0 and the per-row
+// patches described above.
+func unpackHiddenWords(base, patch string) (w [20][16]uint32) {
+	for i := 0; i < 16; i++ {
+		w[0][i] = uint32(base[i*4]) | uint32(base[i*4+1])<<8 | uint32(base[i*4+2])<<16 | uint32(base[i*4+3])<<24
+	}
+	p := 0
+	for r := 1; r < 20; r++ {
+		w[r] = w[0]
+		n := int(patch[p])
+		p++
+		for k := 0; k < n; k++ {
+			idx := int(patch[p])
+			w[r][idx] = uint32(patch[p+1]) | uint32(patch[p+2])<<8 | uint32(patch[p+3])<<16 | uint32(patch[p+4])<<24
+			p += 5
+		}
+	}
+	return
 }

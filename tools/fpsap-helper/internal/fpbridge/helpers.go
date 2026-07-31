@@ -5,7 +5,7 @@
 // The pipeline is:
 //
 //	Phase 1  wbaesFullPhase1   White-Box AES T-boxes -> the 128-byte GP buffer
-//	Bridge   bridgeX9Data      9 MD5-family blocks   -> x9Data
+//	Bridge   bridgeX9DataClosed  closed-form descriptor -> x9Data
 //	Phase 2  fairplayhash      analytical White-Box MD5 -> the 20-byte response
 //
 // The bridge step used to be an 18.8 MB re-rolled transliteration of Apple's ARM64

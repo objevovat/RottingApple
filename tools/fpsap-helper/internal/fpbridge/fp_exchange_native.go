@@ -1,6 +1,10 @@
 package fpbridge
 
-import "rottingapple/fpsap-helper/internal/fairplayhash"
+import (
+	"sync"
+
+	"rottingapple/fpsap-helper/internal/fairplayhash"
+)
 
 // FPExchangeNative computes the FairPlay SAP m3 response (20 bytes) from the
 // 128-byte m2 challenge with no interpreter and no transliterated code:
@@ -18,14 +22,24 @@ import "rottingapple/fpsap-helper/internal/fairplayhash"
 // (TestLayerDPhase2* ): it never reads the 16KB scratch window or initialMD5,
 // x9Data[0:16] reaches it only through Vreg0, and Vreg1..3 are constants. So a
 // zeroed scratch buffer is correct here, not a shortcut.
+// scratchPool recycles the 16 KB Phase-2 window. Its incoming contents cannot
+// affect the result -- TestLayerDPhase2ReadsAlgoMem overwrites the whole window
+// with zeros, 0xFF and random bytes and the m3 does not move -- so buffers are
+// returned to the pool without being cleared.
+// Pooling a pointer rather than the slice keeps Get/Put from boxing a slice
+// header into an interface, which is itself an allocation.
+var scratchPool = sync.Pool{New: func() any { return new([16384]byte) }}
+
 func FPExchangeNative(payload [128]byte) [20]byte {
 	gp := wbaesFullPhase1(payload)
-	x9Data := bridgeX9Data(gp)
+	x9 := bridgeX9DataClosed(gp)
+	x9Data := x9[:]
 	ns := bridgeNeonState(x9Data)
 
-	var state fairplayhash.HashState
-	state.Mem = make([]byte, 16384)
+	mem := scratchPool.Get().(*[16384]byte)
+	defer scratchPool.Put(mem)
 
+	state := fairplayhash.HashState{Mem: mem[:]}
 	fairplayhash.ComputeM3Setup(&state, [4]uint32{})
 	fairplayhash.ComputeHashAnalytical(&state, &ns, x9Data)
 
