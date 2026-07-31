@@ -100,5 +100,7 @@ bulk is simply a good deal smaller than it was.
   payloads, pinned to the value recorded before any of the size work, plus the
   no-Apple-addresses check
 
-Upstream research repository:
-<https://github.com/objevovat/fairplay-sap-airplay2-authentication-handshake-whitebox-aes-md5-reverse-engineering-go-rust>
+The reverse engineering behind this was done in a separate codebase that is not
+currently published. Everything needed to check this code is in this directory:
+the vectors, the tests, and the differential harness against the interpreter it
+replaces.
