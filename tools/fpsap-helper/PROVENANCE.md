@@ -17,34 +17,16 @@
 - `fpemu/fpexchange_data.go` — 1,008,975 bytes of Go holding a 165,575-byte
   snapshot of Apple's signed FairPlay binary, which the interpreter executed
 
-## Licensing, stated precisely
+## Licensing
 
-This changed with the closed form, and the change runs against my earlier claim
-here, so it is worth being blunt about.
+- `internal/fpbridge`, `internal/fairplayhash` — independent reverse
+  engineering, **Blue Oak Model License 1.0.0** (permissive).
+- `internal/fpsapcore` — derived from
+  [omarroth/doubletake](https://github.com/omarroth/doubletake) at `8ccea5f`,
+  **LGPL-3.0**. See `internal/fpsapcore/NOTICE.md`.
 
-- `internal/fpbridge` and `internal/fairplayhash` are independent reverse
-  engineering, offered under the **Blue Oak Model License 1.0.0**.
-- `internal/fpsapcore` **is derived from
-  [omarroth/doubletake](https://github.com/omarroth/doubletake)** at commit
-  `8ccea5f`, which is **LGPL-3.0**. `fairplay_sap.go` and `fairplay_md5.go` come
-  from its `internal/airplay` package; `descriptor.go` carries its descriptor
-  function and constants. Local modifications (`bridge.go`, `fast.go`,
-  `ring.go`) fold away payload-independent prefix blocks and tabulate the
-  scramble's index sequences, and are covered by the same licence.
-
-An earlier revision of this file said the contribution derived from doubletake
-"not at all". That was true of the generated bridge it described — 8.1 MB of
-partial-evaluation output — and stopped being true when that bridge was replaced
-by the closed form. Redistributors should honour LGPL-3.0 for `fpsapcore`.
-
-It also reverses an argument made here previously. This directory's `LICENSE` is
-GPL-3.0 precisely *because* it derived from doubletake, and I suggested that
-rationale no longer described the contents and might be retired. **It describes
-them again.** Keep the GPL-3.0 licence and the subprocess isolation; the earlier
-suggestion was based on a tree that no longer exists.
-
-The two licences compose without friction: Blue Oak is permissive, LGPL-3.0
-flows into GPL-3.0, and this directory is already GPL-3.0.
+Both flow into this directory's existing GPL-3.0 without friction, so keep the
+`LICENSE` and the subprocess isolation as they are.
 
 ## What is and is not claimed
 
@@ -101,16 +83,34 @@ what it replaces, and the parts that are not constant tables can be read.
 
 ## Verification
 
-- 142/142 archived golden vectors (`testdata/golden_vectors.csv`)
-- 8/8 vectors published by two unrelated senders — `nored/airfry` and
-  `omarroth/doubletake` — that compute this exchange by emulating Apple's
-  binary, so agreement is independent of the reverse engineering behind this
-  code
-- 347/347 differential comparisons against the interpreter this replaces,
-  including 300 random payloads and 40 full 142-byte m2 messages, driven end to
-  end through both helper binaries
+Against the interpreter this replaces, both binaries driven end to end:
 
-The reverse engineering behind this was done in a separate codebase that is not
-currently published. Everything needed to check this code is in this directory:
-the vectors, the tests, and the differential harness against the interpreter it
-replaces.
+- **4,923 inputs, 0 mismatches** — every single-byte position across the payload,
+  one bit set in each 16-byte block, all-ones with a byte cleared, solid fills,
+  counter ramps, 4,500 random payloads and 200 full 142-byte m2 messages. The
+  concatenated outputs hash identically.
+- **13/13 error and edge cases behave identically** — empty input, odd-length
+  hex, non-hex, off-by-one lengths, trailing newline, uppercase hex, oversized
+  input. Same exit codes, same stderr behaviour.
+
+Independently of the interpreter:
+
+- 142/142 archived golden vectors, both payload→hash and m2→m3
+- 8/8 vectors published by `nored/airfry` and `omarroth/doubletake`, which
+  compute this exchange by emulating Apple's binary
+- **15.2 million fuzz executions** across `FPExchangeBlobless` and
+  `FPSAPExchangeM3`, no crashes
+- builds for linux/amd64, linux/arm64, linux/386, windows/amd64, windows/386 and
+  darwin/arm64; `go vet` clean on 32- and 64-bit
+
+Internal consistency, in the repository's existing habit of keeping the slow path
+and testing the fast one against it:
+
+- the fast descriptor against the reference, 3,000 random bodies
+- the collapsed scramble against the reference, 50,000 random inputs
+- the ring loop's tabulated and counter-driven indices against the naive
+  derivation, with a control asserting the `uint32` wrap really is irregular
+  (it differs from the obvious form on all 155 affected steps)
+
+The differential harness was checked against a deliberate fault: perturbing one
+mask in the bridge makes 52 of 52 sampled inputs disagree.
