@@ -19,19 +19,32 @@
 
 ## Licensing, stated precisely
 
-The replacement was produced by independent reverse engineering. It is **not**
-derived from `omarroth/doubletake`, and it is offered under the
-**Blue Oak Model License 1.0.0**, which is permissive and flows into GPL-3.0
-without friction.
+This changed with the closed form, and the change runs against my earlier claim
+here, so it is worth being blunt about.
 
-This directory's `LICENSE` is left as GPL-3.0, unchanged. That is deliberate:
-the directory's licence is the maintainer's call, and GPL-3.0 remains valid for
-a permissively-licensed contribution. But the rationale recorded there — that
-the code is "derived from doubletake" — no longer describes what is here, so it
-is worth revisiting. If no GPL-derived code remains in the tree, the
-subprocess-isolation arrangement that keeps the main application MIT may no
-longer be necessary. That is a larger change than this one and is not attempted
-here.
+- `internal/fpbridge` and `internal/fairplayhash` are independent reverse
+  engineering, offered under the **Blue Oak Model License 1.0.0**.
+- `internal/fpsapcore` **is derived from
+  [omarroth/doubletake](https://github.com/omarroth/doubletake)** at commit
+  `8ccea5f`, which is **LGPL-3.0**. `fairplay_sap.go` and `fairplay_md5.go` come
+  from its `internal/airplay` package; `descriptor.go` carries its descriptor
+  function and constants. Local modifications (`bridge.go`, `fast.go`,
+  `ring.go`) fold away payload-independent prefix blocks and tabulate the
+  scramble's index sequences, and are covered by the same licence.
+
+An earlier revision of this file said the contribution derived from doubletake
+"not at all". That was true of the generated bridge it described — 8.1 MB of
+partial-evaluation output — and stopped being true when that bridge was replaced
+by the closed form. Redistributors should honour LGPL-3.0 for `fpsapcore`.
+
+It also reverses an argument made here previously. This directory's `LICENSE` is
+GPL-3.0 precisely *because* it derived from doubletake, and I suggested that
+rationale no longer described the contents and might be retired. **It describes
+them again.** Keep the GPL-3.0 licence and the subprocess isolation; the earlier
+suggestion was based on a tree that no longer exists.
+
+The two licences compose without friction: Blue Oak is permissive, LGPL-3.0
+flows into GPL-3.0, and this directory is already GPL-3.0.
 
 ## What is and is not claimed
 
