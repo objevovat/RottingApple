@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BlueOak-1.0.0
+
 package fairplayhash
 
 import "math/bits"
@@ -45,7 +47,9 @@ var plainAddConsts = func() [64]uint32 {
 // RoundC_MD5Plain computes the same result as RoundC_WBMD5_Permuted with the
 // white-box encoding layer removed. hiddenG2 == nil triggers the same
 // state-dependent ShuffleHiddenG2 at sub-round 32.
-func RoundC_MD5Plain(state *[4]uint32, hiddenG0, hiddenG2 *[16]uint32) {
+// RoundC_MD5PlainReference is the sub-round loop as first written, kept as the
+// oracle TestRoundCUnrolledMatchesReference checks the unrolled form against.
+func RoundC_MD5PlainReference(state *[4]uint32, hiddenG0, hiddenG2 *[16]uint32) {
 	a, b, c, d := state[0], state[1], state[2], state[3]
 
 	// Declared up front so the shuffle result does not escape to the heap.

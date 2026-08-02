@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BlueOak-1.0.0
+
 package fairplayhash
 
 // SPN1TrailTables: the 16 byte->byte output S-boxes of SPN#1's trailing final

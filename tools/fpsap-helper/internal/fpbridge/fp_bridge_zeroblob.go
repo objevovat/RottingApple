@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BlueOak-1.0.0
+
 package fpbridge
 
 // FPBridgeZeroBlob computes the FairPlay Phase-1 "bridge" outputs -- Vreg0 and

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BlueOak-1.0.0
+
 package fairplayhash
 
 // tail_spn.go implements the analytically reverse-engineered 9-round WB-AES
@@ -52,7 +54,9 @@ var tailSPNXORMask = [16]byte{
 //   - mixTable: 144-byte mixing table from Block A output
 //
 // Returns: 16-byte span7 state after SPN + output encoding + XOR mask
-func TailSPN(input [16]byte, mixTable [144]byte) [16]byte {
+// TailSPNReference is the loop as first written, kept as the oracle
+// TestTailSPNMatchesReference checks the current form against.
+func TailSPNReference(input [16]byte, mixTable [144]byte) [16]byte {
 	state := input
 
 	for round := 0; round < 9; round++ {

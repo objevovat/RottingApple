@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Derived from github.com/omarroth/doubletake at 8ccea5f. See ../../NOTICE.md.
+
 package fpsapcore
 
 // FairPlay's proprietary SAP hash. It is not a standard cryptographic hash.
@@ -61,24 +64,29 @@ func fairplaySAPHash(block []byte) (out [16]byte) {
 	// 155) advancing together, so the rest runs in segments chosen to end at the
 	// next wrap -- no per-step table load, and each segment walks four contiguous
 	// spans the prefetcher can follow.
-	for i := 0; i < 155; i++ {
-		wi := ringW[i]
-		x, y, z, w := work[ringX[i]], work[ringY[i]], work[ringZ[i]], work[wi]
-		work[wi] = bits.RotateLeft8(y, 5) + (bits.RotateLeft8(z, 3) ^ w) - bits.RotateLeft8(x, 7)
+	for _, r := range ringRuns {
+		ringSegment(work, r.xi, r.yi, r.zi, r.wi, r.n)
 	}
 	xi, yi, zi, wi := 0, 98, 142, 155
 	for i := 155; i < 840; {
-		n := 840 - i
-		for _, idx := range [4]int{xi, yi, zi, wi} {
-			if r := 210 - idx; r < n {
-				n = r
-			}
+		// The segment ends at the first wrap, so it is bounded by whichever
+		// index is furthest along. Written out rather than as a range over a
+		// four-element array, which the compiler materialises every segment.
+		hi := xi
+		if yi > hi {
+			hi = yi
 		}
-		for k := 0; k < n; k++ {
-			x, y, z := work[xi+k], work[yi+k], work[zi+k]
-			w := work[wi+k]
-			work[wi+k] = bits.RotateLeft8(y, 5) + (bits.RotateLeft8(z, 3) ^ w) - bits.RotateLeft8(x, 7)
+		if zi > hi {
+			hi = zi
 		}
+		if wi > hi {
+			hi = wi
+		}
+		n := 210 - hi
+		if r := 840 - i; r < n {
+			n = r
+		}
+		ringSegment(work, xi, yi, zi, wi, n)
 		i += n
 		xi = (xi + n) % 210
 		yi = (yi + n) % 210

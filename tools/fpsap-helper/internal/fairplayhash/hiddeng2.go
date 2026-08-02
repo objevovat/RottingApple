@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BlueOak-1.0.0
+
 package fairplayhash
 
 // HiddenWordsG0 contains the 16 hidden words used for groups 0-1 (sub-rounds 0-31)

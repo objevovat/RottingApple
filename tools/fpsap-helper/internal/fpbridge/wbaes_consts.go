@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BlueOak-1.0.0
+
 package fpbridge
 
 import "sync"
@@ -107,6 +109,7 @@ func buildMixingConsts() {
 		zeroState[14] = byte(cols[3] >> 24)
 		zeroState[15] = byte(cols[0] >> 24)
 	}
+	buildFusedTypeI()
 }
 
 // wbaesBlockTbox computes one WB-AES block using extracted T-box tables.

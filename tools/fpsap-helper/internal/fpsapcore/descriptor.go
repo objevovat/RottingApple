@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Derived from github.com/omarroth/doubletake at 8ccea5f. See ../../NOTICE.md.
+
 // Package fpsapcore is the closed-form FairPlay Phase-1 bridge.
 //
 // It computes the same 20 payload-dependent bytes as internal/layera +

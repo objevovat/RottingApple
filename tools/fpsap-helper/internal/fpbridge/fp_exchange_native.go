@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BlueOak-1.0.0
+
 package fpbridge
 
 import (
@@ -33,7 +35,12 @@ var scratchPool = sync.Pool{New: func() any { return new([16384]byte) }}
 func FPExchangeNative(payload [128]byte) [20]byte {
 	gp := wbaesFullPhase1(payload)
 	x9 := bridgeX9DataClosed(gp)
-	x9Data := x9[:]
+	return exchangeFromX9(x9[:])
+}
+
+// exchangeFromX9 runs Phase 2 over a bridge digest. Split out so a session-aware
+// exchange, whose digest depends on its own local SAP, shares this path exactly.
+func exchangeFromX9(x9Data []byte) [20]byte {
 	ns := bridgeNeonState(x9Data)
 
 	mem := scratchPool.Get().(*[16384]byte)

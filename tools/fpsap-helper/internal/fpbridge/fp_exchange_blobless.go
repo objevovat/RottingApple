@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BlueOak-1.0.0
+
 package fpbridge
 
 // FPExchangeBlobless computes the full FairPlay SAP m3 response hash (20 bytes)

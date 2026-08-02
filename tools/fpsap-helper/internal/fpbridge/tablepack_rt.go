@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BlueOak-1.0.0
+
 package fpbridge
 
 // unpackTable rebuilds one 256-byte table from its base and XOR masks:

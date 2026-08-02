@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BlueOak-1.0.0
+
 package fairplayhash
 
 // SPN#1's trailing output-encoding stage is an AES FINAL round (SubBytes +

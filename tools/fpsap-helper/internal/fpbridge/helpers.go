@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BlueOak-1.0.0
+
 // Package fpbridge is a self-contained, fully algorithmic implementation of the
 // FairPlay SAP handshake: it computes the 20-byte m3 response from the 128-byte
 // m2 challenge with no Apple blob, no build tags, and no transliterated code.

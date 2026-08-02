@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BlueOak-1.0.0
+
 package fpbridge
 
 // gpBufferPerm maps T-box raw position i to GP buffer position gpBufferPerm[i].
@@ -10,7 +12,9 @@ var gpBufferPerm = [16]int{0, 4, 8, 12, 13, 9, 5, 1, 2, 10, 6, 14, 3, 7, 11, 15}
 //
 // This core is identical for ALL 8 blocks — the only difference between
 // blocks is the output encoding applied afterward.
-func wbaesBlockCore(input [16]byte) [16]byte {
+// wbaesBlockCoreReference is the core as first written, kept as the oracle
+// TestFusedTypeIMatchesReference checks the fused path against.
+func wbaesBlockCoreReference(input [16]byte) [16]byte {
 	wbaesInitMixingConsts()
 
 	var state [16]byte

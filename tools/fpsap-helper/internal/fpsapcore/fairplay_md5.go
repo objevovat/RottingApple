@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Derived from github.com/omarroth/doubletake at 8ccea5f. See ../../NOTICE.md.
+
 package fpsapcore
 
 import (
@@ -42,7 +45,9 @@ var fairplayMD5Constant = [64]uint32{
 	0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391,
 }
 
-func fairplayMD5Compress(state [4]uint32, block []byte, mutation fairplayMD5Mutation) [4]uint32 {
+// fairplayMD5CompressReference is the round loop as first written, kept as the
+// oracle TestMD5CompressUnrolledMatchesReference checks the unrolled form against.
+func fairplayMD5CompressReference(state [4]uint32, block []byte, mutation fairplayMD5Mutation) [4]uint32 {
 	var message [16]uint32
 	for i := range message {
 		message[i] = binary.BigEndian.Uint32(block[i*4:])

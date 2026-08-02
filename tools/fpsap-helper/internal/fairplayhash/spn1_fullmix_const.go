@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BlueOak-1.0.0
+
 package fairplayhash
 
 // SPN#1's full MixColumns (all 4 columns) as a GF(2)-affine 128-bit map, plus

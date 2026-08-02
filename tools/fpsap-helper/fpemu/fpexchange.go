@@ -23,6 +23,7 @@ package fpemu
 
 import (
 	"fmt"
+	"io"
 
 	"rottingapple/fpsap-helper/internal/fpbridge"
 )
@@ -34,17 +35,39 @@ func FPSAPExchangeStandalone(payload [128]byte) [20]byte {
 	return fpbridge.FPExchangeBlobless(payload)
 }
 
-// FPSAPExchangeM3 computes the full 164-byte m3 response for a 142-byte m2.
+// ParseFPSAPM2 validates an m2 record and returns its 128-byte challenge. Use
+// this instead of slicing bytes 14:142, which skips the framing and mode
+// checks.
+func ParseFPSAPM2(m2 []byte) ([128]byte, error) {
+	p, err := fpbridge.ParseFPSAPM2(m2)
+	if err != nil {
+		return p, fmt.Errorf("fpemu: %w", err)
+	}
+	return p, nil
+}
+
+// FPSAPExchangeM3 computes the full 164-byte m3 response for a 142-byte m2,
+// replaying one captured local SAP.
 //
 // Retained for API compatibility; the helper's main.go does not call it, and
-// crates/rotten-crypto does its own framing. Note the caveat carried by the
-// underlying implementation: the 144-byte prefix is a constant captured from a
-// single session, so this replays one local SAP rather than generating a fresh
-// one per session. See fpbridge.FPSAPExchangeM3.
+// crates/rotten-crypto does its own framing. Prefer NewFPSAPSession for
+// anything talking to a real receiver: the 144-byte prefix here is a constant
+// captured from a single session, and receivers that check the m3 body reject
+// the replay with RTSP/1.0 466 Key Management Error.
 func FPSAPExchangeM3(m2 []byte) ([]byte, error) {
 	m3, err := fpbridge.FPSAPExchangeM3(m2)
 	if err != nil {
 		return nil, fmt.Errorf("fpemu: %w", err)
 	}
 	return m3, nil
+}
+
+// NewFPSAPSession starts an exchange that generates its own local SAP, so no
+// two sessions emit the same m3. Pass crypto/rand.Reader outside tests.
+func NewFPSAPSession(entropy io.Reader) (*fpbridge.FPSAPSession, error) {
+	s, err := fpbridge.NewFPSAPSession(entropy)
+	if err != nil {
+		return nil, fmt.Errorf("fpemu: %w", err)
+	}
+	return s, nil
 }

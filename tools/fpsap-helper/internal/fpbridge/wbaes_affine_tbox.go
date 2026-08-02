@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BlueOak-1.0.0
+
 package fpbridge
 
 // gfMulAES performs multiplication in GF(2^8) using the AES irreducible polynomial

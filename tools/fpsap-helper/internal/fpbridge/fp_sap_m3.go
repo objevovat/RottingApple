@@ -1,6 +1,9 @@
+// SPDX-License-Identifier: BlueOak-1.0.0
+
 package fpbridge
 
 import (
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 )
@@ -16,6 +19,19 @@ var m3Prefix, _ = hex.DecodeString(
 		"7a66cd302d04aac3c1251714019bd5f2d49b543e11eed1646291ec8efd96b691" +
 		"01b849fd93a02860d1a0dff5cd4414aa")
 
+// SupportedFPSAPMode is the only FairPlay message mode this package can answer.
+//
+// An m2 selects a mode in byte 13, and the mode picks both the CBC IV and the
+// AES round keys used for the message body -- so the same 128-byte challenge
+// produces four entirely different responses under modes 0..3. Our Phase 1 is
+// white-box AES over baked T-boxes, and those tables encode mode 3's key
+// schedule alone; there is no parameter that could select another.
+//
+// Verified against omarroth/doubletake, which implements all four: for the same
+// payload, FPExchangeNative reproduces their mode 3 byte for byte and matches
+// none of modes 0, 1 or 2.
+const SupportedFPSAPMode = 3
+
 // FPSAPExchangeM3 computes the FairPlay SAP m3 response for a given m2 message.
 // It returns the full 164-byte m3: a 144-byte prefix followed by the 20-byte
 // challenge response.
@@ -25,22 +41,30 @@ var m3Prefix, _ = hex.DecodeString(
 // golden vectors, plus eight vectors from two independent emulator-based senders
 // (see external_vectors_test.go).
 //
-// Known limitation — replays one frozen session. The 144-byte prefix is a
-// constant, so every m3 this function emits carries the same local SAP. Real
-// senders generate that SAP per session and encrypt it into the m3 body.
-// Receivers that validate the body reject the replay: omarroth/doubletake#17
-// reports RTSP/1.0 466 Key Management Error from an AppleTV3,2, and doubletake
-// removed its own hardcoded prefix in e544a88 (2026-07-20) to fix it.
+// # Two limitations, and only one of them is recoverable by the caller
+//
+// Mode. An m2 that selects anything other than mode 3 is rejected with an
+// error. Answering it would mean emitting a response derived from the wrong key
+// schedule -- wrong bytes presented as an answer, which is worse than a refusal.
+// Before 2026-08-01 this function ignored byte 13 entirely and replied as though
+// every m2 had asked for mode 3.
+//
+// Session replay. The 144-byte prefix is a constant, so every m3 this function
+// emits carries the same local SAP. Real senders generate that SAP per session
+// and encrypt it into the m3 body. Receivers that validate the body reject the
+// replay: omarroth/doubletake#17 reports RTSP/1.0 466 Key Management Error from
+// an AppleTV3,2, and doubletake removed its own hardcoded prefix in e544a88
+// (2026-07-20) to fix it. Fixing it here needs a per-session localSAP encrypted
+// with the mode's round keys, which this package does not carry.
 //
 // So: trust FPExchangeBlobless, and treat this framing as a reference that works
-// against permissive receivers only. Callers wanting broad device compatibility
-// need a session-aware m3 body.
+// against permissive mode-3 receivers only. Callers wanting broad device
+// compatibility need a session-aware m3 body.
 func FPSAPExchangeM3(m2 []byte) ([]byte, error) {
-	if len(m2) < 142 {
-		return nil, fmt.Errorf("m2 too short: %d bytes (need >= 142)", len(m2))
+	payload, err := parseFPSAPM2(m2)
+	if err != nil {
+		return nil, err
 	}
-	var payload [128]byte
-	copy(payload[:], m2[14:142])
 
 	hash := FPExchangeBlobless(payload)
 
@@ -49,3 +73,52 @@ func FPSAPExchangeM3(m2 []byte) ([]byte, error) {
 	copy(m3[144:], hash[:])
 	return m3, nil
 }
+
+// parseFPSAPM2 validates a receiver's m2 record and returns its 128-byte
+// challenge. An m2 is a 142-byte FPLY record: 12 bytes of framing, then a
+// 130-byte payload. Checking the framing rather than just the length is what
+// stops a truncated or misaligned buffer being read as a challenge.
+func parseFPSAPM2(m2 []byte) (payload [128]byte, err error) {
+	if len(m2) != 142 {
+		return payload, fmt.Errorf("m2 is %d bytes, want 142", len(m2))
+	}
+	if string(m2[:4]) != "FPLY" {
+		return payload, fmt.Errorf("m2 has magic %x, want FPLY", m2[:4])
+	}
+	if m2[4] != 3 || m2[5] != 1 || m2[6] != 2 || m2[7] != 0 {
+		return payload, fmt.Errorf("m2 has version/type %x, want 03010200", m2[4:8])
+	}
+	if got := binary.BigEndian.Uint32(m2[8:12]); got != 130 {
+		return payload, fmt.Errorf("m2 declares a %d-byte payload, want 130", got)
+	}
+	if m2[12] != 2 {
+		return payload, fmt.Errorf("m2 has payload marker %d, want 2", m2[12])
+	}
+	if mode := m2[13]; mode != SupportedFPSAPMode {
+		return payload, fmt.Errorf("m2 selected FairPlay mode %d; this package answers only mode %d, "+
+			"because Phase 1's tables bake that mode's key schedule", mode, SupportedFPSAPMode)
+	}
+	copy(payload[:], m2[14:142])
+	return payload, nil
+}
+
+// NewFPSAPM2 builds a well-formed m2 record carrying the given challenge, for
+// tests and for callers driving this package from a captured payload rather
+// than from a live receiver.
+func NewFPSAPM2(mode byte, challenge [128]byte) []byte {
+	m2 := make([]byte, 142)
+	copy(m2[:4], "FPLY")
+	copy(m2[4:8], []byte{3, 1, 2, 0})
+	binary.BigEndian.PutUint32(m2[8:12], 130)
+	m2[12] = 2
+	m2[13] = mode
+	copy(m2[14:142], challenge[:])
+	return m2
+}
+
+// ParseFPSAPM2 validates a receiver's m2 record and returns its 128-byte
+// challenge, for callers that want the 20-byte response without a full m3
+// frame. Slicing bytes 14:142 out of an m2 by hand skips both the framing check
+// and the mode check, which is how a sender ends up answering a mode-0 m2 with
+// a mode-3 response.
+func ParseFPSAPM2(m2 []byte) ([128]byte, error) { return parseFPSAPM2(m2) }

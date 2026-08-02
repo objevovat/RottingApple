@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BlueOak-1.0.0
+
 package fairplayhash
 
 // RoundA_Bswap_Export is an exported wrapper around roundA_bswap for testing.

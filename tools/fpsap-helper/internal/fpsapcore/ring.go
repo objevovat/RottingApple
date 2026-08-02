@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Derived from github.com/omarroth/doubletake at 8ccea5f. See ../../NOTICE.md.
+
 package fpsapcore
 
 // The scramble's four index sequences are the same on every call, and three of

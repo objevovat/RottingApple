@@ -21,12 +21,14 @@ RottingApple (MIT OR Apache-2.0) incorporates or invokes the following third-par
 - **Location:** `tools/fpsap-helper/`
 - **License:** GPL-3.0 (see `tools/fpsap-helper/LICENSE`).
 - **Distribution:** Build with Go (`scripts/build-windows.sh`) and ship `fpsap-helper` / `fpsap-helper.exe` next to `rottingapple`. Do not embed the GPL binary inside `rottingapple`.
-- **Contents:** the exchange is computed natively under `tools/fpsap-helper/internal/`. No ARM64 interpreter and no snapshot of Apple's signed binary are present. See `tools/fpsap-helper/PROVENANCE.md`.
+- **Contents:** the exchange is computed natively under `tools/fpsap-helper/internal/`. No ARM64 interpreter and no snapshot of Apple's signed binary are present. Constant white-box tables remain, because for white-box cryptography the key is dissolved into the tables — the tables *are* the cipher, and there is no smaller form. See `tools/fpsap-helper/PROVENANCE.md`.
+- **Inner licences:** `internal/fpsapcore` is **LGPL-3.0** (derived from doubletake, see below); `internal/fpbridge` and `internal/fairplayhash` are **Blue Oak 1.0.0**. Every file carries an SPDX header. Both flow into this directory's GPL-3.0 without friction.
 
-## doubletake (reference)
+## doubletake
 
-- **Use:** historical. `fpsap-helper` previously carried an ARM64 interpreter derived from doubletake, plus an embedded snapshot of Apple's FairPlay binary that the interpreter executed. Both were removed when the exchange was replaced by a native implementation of independent provenance.
-- **License:** GPL-3.0 — https://github.com/omarroth/doubletake
+- **Use:** **current, not historical.** `tools/fpsap-helper/internal/fpsapcore` is derived from doubletake at commit `8ccea5f` — `fairplay_sap.go` and `fairplay_md5.go` are taken from its `internal/airplay` package, and the rest of that package modifies its code. `tools/fpsap-helper/internal/fpsapcore/NOTICE.md` has the file-by-file breakdown.
+- Separately and historically, `fpsap-helper` once carried an ARM64 interpreter derived from doubletake plus an embedded snapshot of Apple's FairPlay binary. Both are gone. An earlier revision of this file described the replacement as "a native implementation of independent provenance", which was true of the interpreter's removal but became wrong once the bridge was replaced by doubletake's closed form.
+- **License:** LGPL-3.0 — https://github.com/omarroth/doubletake
 
 ## Other Rust dependencies
 

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BlueOak-1.0.0
+
 package fpbridge
 
 import "rottingapple/fpsap-helper/internal/fpsapcore"
@@ -12,6 +14,17 @@ func bridgeX9DataClosed(gp [128]byte) [64]byte {
 	head := fpsapcore.BridgeX9Head(gp)
 	var x9 [64]byte
 	copy(x9[:], head[:])
+	copy(x9[20:], bridgeX9Tail[:])
+	return x9
+}
+
+func bridgeX9DataClosedForSAP(localSAP, gp [128]byte) [64]byte {
+	head := fpsapcore.BridgeX9HeadForSAP(localSAP, gp)
+	var x9 [64]byte
+	copy(x9[:], head[:])
+	// The tail is constant across both payload and local SAP: Phase 2 is seeded
+	// by the 20-byte descriptor alone, which is why doubletake's exchange takes
+	// only that digest. TestPhase2NeedsOnlyTheBridgeDigest pins it.
 	copy(x9[20:], bridgeX9Tail[:])
 	return x9
 }

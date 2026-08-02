@@ -30,7 +30,15 @@ func main() {
 	var payload [128]byte
 	switch len(data) {
 	case 142:
-		copy(payload[:], data[14:142])
+		// Parse rather than slice. A hand-sliced m2 skips the FPLY framing
+		// check and, more importantly, the mode byte: this helper only knows
+		// mode 3, and answering a mode-0 m2 with a mode-3 response returns
+		// confident wrong bytes instead of an error.
+		p, err := fpemu.ParseFPSAPM2(data)
+		if err != nil {
+			fatal(err)
+		}
+		payload = p
 	case 128:
 		copy(payload[:], data)
 	default:

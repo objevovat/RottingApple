@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BlueOak-1.0.0
+
 package fpbridge
 
 import (
@@ -97,8 +99,8 @@ func TestExternalGoldenVectors(t *testing.T) {
 // This test exists so the constant cannot be mistaken for a protocol invariant.
 // It should be deleted when the framing layer generates a fresh local SAP.
 func TestM3PrefixIsFrozenSession(t *testing.T) {
-	m2 := make([]byte, 142)
-	copy(m2, "FPLY")
+	var challenge [128]byte
+	m2 := NewFPSAPM2(SupportedFPSAPMode, challenge)
 
 	a, err := FPSAPExchangeM3(m2)
 	if err != nil {

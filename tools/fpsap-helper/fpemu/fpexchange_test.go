@@ -1,10 +1,13 @@
 package fpemu
 
 import (
+	"crypto/rand"
 	"encoding/csv"
 	"encoding/hex"
 	"os"
 	"testing"
+
+	"rottingapple/fpsap-helper/internal/fpbridge"
 )
 
 // These exercise the exported seam — the two functions main.go and
@@ -132,8 +135,8 @@ func TestFPSAPExchangeM3Framing(t *testing.T) {
 		t.Error("expected an error for a short m2, got nil")
 	}
 
-	m2 := make([]byte, 142)
-	copy(m2, "FPLY")
+	var challenge [128]byte
+	m2 := fpbridge.NewFPSAPM2(fpbridge.SupportedFPSAPMode, challenge)
 	a, err := FPSAPExchangeM3(m2)
 	if err != nil {
 		t.Fatal(err)
@@ -142,7 +145,8 @@ func TestFPSAPExchangeM3Framing(t *testing.T) {
 		t.Fatalf("m3 is %d bytes, want 164", len(a))
 	}
 
-	m2[20] ^= 0xff
+	challenge[6] ^= 0xff
+	m2 = fpbridge.NewFPSAPM2(fpbridge.SupportedFPSAPMode, challenge)
 	b, err := FPSAPExchangeM3(m2)
 	if err != nil {
 		t.Fatal(err)
@@ -150,6 +154,90 @@ func TestFPSAPExchangeM3Framing(t *testing.T) {
 	if hex.EncodeToString(a[144:]) == hex.EncodeToString(b[144:]) {
 		t.Error("m3 tail did not change with the payload; the exchange is ignoring its input")
 	}
+}
+
+// TestRejectsUnsupportedModes is the point of parsing rather than slicing. This
+// helper implements mode 3 only, and the earlier code answered every m2 as
+// though it had asked for mode 3 -- so a mode-0 challenge got confident wrong
+// bytes back instead of an error.
+func TestRejectsUnsupportedModes(t *testing.T) {
+	var challenge [128]byte
+	for _, mode := range []byte{0, 1, 2} {
+		if _, err := ParseFPSAPM2(fpbridge.NewFPSAPM2(mode, challenge)); err == nil {
+			t.Errorf("mode %d was accepted; only mode %d is implemented", mode, fpbridge.SupportedFPSAPMode)
+		}
+	}
+	if _, err := ParseFPSAPM2(fpbridge.NewFPSAPM2(fpbridge.SupportedFPSAPMode, challenge)); err != nil {
+		t.Errorf("mode %d rejected: %v", fpbridge.SupportedFPSAPMode, err)
+	}
+}
+
+// TestParseRejectsMalformedFraming covers what hand-slicing bytes 14:142 could
+// not: a buffer of the right length that is not an m2 at all.
+func TestParseRejectsMalformedFraming(t *testing.T) {
+	var challenge [128]byte
+	good := fpbridge.NewFPSAPM2(fpbridge.SupportedFPSAPMode, challenge)
+
+	for _, tc := range []struct {
+		name string
+		mut  func([]byte)
+	}{
+		{"bad magic", func(b []byte) { b[0] = 'X' }},
+		{"bad version", func(b []byte) { b[4] = 9 }},
+		{"bad length field", func(b []byte) { b[11] = 0 }},
+		{"bad payload marker", func(b []byte) { b[12] = 7 }},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			bad := append([]byte(nil), good...)
+			tc.mut(bad)
+			if _, err := ParseFPSAPM2(bad); err == nil {
+				t.Errorf("%s was accepted", tc.name)
+			}
+		})
+	}
+}
+
+// TestSessionsDoNotRepeat is the reason NewFPSAPSession exists: a receiver that
+// checks the m3 body rejects a replayed local SAP.
+func TestSessionsDoNotRepeat(t *testing.T) {
+	var challenge [128]byte
+	m2 := fpbridge.NewFPSAPM2(fpbridge.SupportedFPSAPMode, challenge)
+
+	first, err := NewFPSAPSession(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := NewFPSAPSession(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	a, err := first.ExchangeM3(m2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := second.ExchangeM3(m2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(a) != 164 || len(b) != 164 {
+		t.Fatalf("m3 lengths %d and %d, want 164", len(a), len(b))
+	}
+	if hex.EncodeToString(a) == hex.EncodeToString(b) {
+		t.Error("two sessions produced the same m3; the local SAP is not per-session")
+	}
+	if hex.EncodeToString(a[:144]) == hex.EncodeToString(frozen(t, m2)[:144]) {
+		t.Error("session m3 reused the frozen prefix")
+	}
+}
+
+func frozen(t *testing.T, m2 []byte) []byte {
+	t.Helper()
+	m3, err := FPSAPExchangeM3(m2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return m3
 }
 
 func mustHex(t *testing.T, s string) []byte {

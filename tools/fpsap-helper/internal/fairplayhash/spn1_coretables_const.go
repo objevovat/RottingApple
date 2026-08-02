@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BlueOak-1.0.0
+
 package fairplayhash
 
 // SPN1CoreTables[round][outPos] is the TypeI substitution table for SPN#1's

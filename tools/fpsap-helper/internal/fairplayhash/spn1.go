@@ -1,4 +1,8 @@
+// SPDX-License-Identifier: BlueOak-1.0.0
+
 package fairplayhash
+
+import "encoding/binary"
 
 // SPN1 computes the FairPlay Phase-2 first white-box AES SPN pass, fully
 // analytically (no interpreter). Its plaintext is a payload-independent
@@ -23,14 +27,17 @@ var spn1ShiftRows = [16]int{0, 5, 10, 15, 4, 9, 14, 3, 8, 13, 2, 7, 12, 1, 6, 11
 func SPN1(roundOutputs *[20][4]uint32) [16]byte {
 	state := SPN1CoreInput
 	for r := 0; r < 9; r++ {
+		core := &SPN1CoreTables[r]
 		var stage1 [16]byte
 		for out := 0; out < 16; out++ {
-			stage1[out] = SPN1CoreTables[r][out][state[spn1ShiftRows[out]]]
+			stage1[out] = core[out][state[spn1ShiftRows[out]]]
 		}
+		// The round output is XORed in big-endian byte order, so it goes in a
+		// word at a time rather than through a sixteen-byte intermediate.
 		mixed := ApplyMixColumns(stage1)
-		mix := beRoundOutput(roundOutputs[10+r])
-		for i := 0; i < 16; i++ {
-			state[i] = mixed[i] ^ mix[i]
+		ro := &roundOutputs[10+r]
+		for w := 0; w < 4; w++ {
+			binary.BigEndian.PutUint32(state[w*4:], binary.BigEndian.Uint32(mixed[w*4:])^ro[w])
 		}
 	}
 	return ApplyTrailing(state)
@@ -38,10 +45,7 @@ func SPN1(roundOutputs *[20][4]uint32) [16]byte {
 
 func beRoundOutput(s [4]uint32) (o [16]byte) {
 	for w := 0; w < 4; w++ {
-		o[w*4+0] = byte(s[w] >> 24)
-		o[w*4+1] = byte(s[w] >> 16)
-		o[w*4+2] = byte(s[w] >> 8)
-		o[w*4+3] = byte(s[w])
+		binary.BigEndian.PutUint32(o[w*4:], s[w])
 	}
 	return
 }

@@ -60,26 +60,60 @@ tag, no addresses — but constant tables and a small constant memory image.
 
 ## Size
 
-**300 KB**, against the ~1.07 MB of interpreter and snapshot it replaces. The
-built helper binary also shrinks, 2.96 MB to 2.55 MB.
+**396 KB**, against the ~1.07 MB of interpreter and snapshot it replaces. The
+built helper binary also shrinks, 2.96 MB to 2.49 MB.
 
 An earlier revision of this PR was 8.1 MB and argued the trade was "provenance
 for bulk" — you carry more code, but none of it is Apple's. That framing is
 obsolete. The bridge was machine-generated straight-line code then, produced by
 partial evaluation of an execution trace; it has since been reduced to a closed
-form. `internal/fpsapcore` is now **697 lines of ordinary byte arithmetic**:
+form. `internal/fpsapcore` is now **1,000 lines of ordinary byte arithmetic**
+across ten files:
 
 | file | lines | what it is |
 |---|---|---|
-| `fairplay_sap.go` | 235 | ring diffusion, nonlinear circuit, fold, final scramble |
-| `fairplay_md5.go` | 120 | the MD5-family compression and its mutations |
-| `scramble.go` | 85 | the scramble collapsed to a GF(2) matrix |
-| `descriptor.go` | 61 | the 5-block descriptor |
-| `fast.go`, `ring.go` | 94 | optional prefix folding and index tabulation |
-| `bridge.go` | 38 | `gp ^ 0x0f` and the word swap |
+| `fairplay_sap.go` | 243 | ring diffusion, nonlinear circuit, fold, final scramble |
+| `message_encrypt.go` | 135 | forward-AES encryption of the m3 message body |
+| `fairplay_md5.go` | 125 | the MD5-family compression and its mutations |
+| `ring_swar.go` | 109 | the ring loop in SWAR form |
+| `scramble.go` | 88 | the scramble collapsed to a GF(2) matrix |
+| `fairplay_md5_unrolled.go` | 73 | the round loop unrolled by four |
+| `descriptor.go` | 64 | the 5-block descriptor |
+| `fast.go`, `ring.go`, `bridge.go` | 163 | prefix folding, index tabulation, `gp ^ 0x0f` and the word swap |
 
 So there is no longer a size argument against this change. It is smaller than
 what it replaces, and the parts that are not constant tables can be read.
+
+## Two correctness fixes since this PR was opened
+
+Both were found in the upstream research tree and are folded in here.
+
+**It answered mode 3 to every m2.** An m2 selects a FairPlay message mode in
+byte 13, and the mode picks both the CBC IV and the AES round keys for the
+message body — so the same 128-byte challenge produces four entirely different
+responses under modes 0..3. The helper read bytes 14:142 straight out of the m2
+and never looked at byte 13, so a mode-0 challenge got a mode-3 answer: wrong
+bytes returned confidently, which is worse than an error. Phase 1's tables bake
+mode 3's key schedule and no parameter could select another, so the fix is to
+say so. `main.go` now parses instead of slicing, and any other mode exits 1 with
+a message naming the mode it got. `TestModeIdentityAgainstDoubletake` pins which
+mode we are against omarroth/doubletake, which implements all four.
+
+**The m3 framing replayed one captured session.** `FPSAPExchangeM3`'s 144-byte
+prefix is a constant whose body encodes a local SAP captured from a single
+emulator snapshot. Real senders generate that per session, and receivers that
+check the body reject the replay — doubletake#17 is an AppleTV3,2 answering
+`RTSP/1.0 466 Key Management Error`. `fpemu.NewFPSAPSession(rand.Reader)`
+generates its own local SAP, encrypts it into the m3 body and folds it into the
+response. It is checked two ways: driven with the frozen local SAP it reproduces
+the captured 164-byte m3 for all 142 golden vectors, and given a fresh one it
+matches doubletake byte for byte across the whole frame. The frozen function
+stays, because the golden vectors pin it and `crates/rotten-crypto` does its own
+framing.
+
+Neither fix changes the 20-byte response for a well-formed mode-3 m2, which is
+what `main.go` emits — the 142 golden vectors and the 8 external vectors are
+unchanged.
 
 ## Verification
 

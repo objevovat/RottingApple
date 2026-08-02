@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BlueOak-1.0.0
+
 package fairplayhash
 
 import (
@@ -186,6 +188,14 @@ var g2ShuffleXORConsts = [8]uint32{3, 0xd, 0xb, 6, 1, 0, 0xe, 4}
 // XOR decode is applied — i.e., newB = postAddB ^ OutBias[i] (or + OutBias for
 // ADD-encoded sub-rounds).
 func ShuffleHiddenG2(g0 *[16]uint32, aEnc, bEnc, cEnc, dEnc uint32) [16]uint32 {
+	h := *g0
+	shuffleHiddenG2Into(&h, aEnc, bEnc, cEnc, dEnc)
+	return h
+}
+
+// ShuffleHiddenG2Reference is the loop as first written, kept as the oracle
+// TestShuffleHiddenG2MatchesReference checks the unrolled form against.
+func ShuffleHiddenG2Reference(g0 *[16]uint32, aEnc, bEnc, cEnc, dEnc uint32) [16]uint32 {
 	h := *g0 // copy
 	regs := [4]uint32{aEnc, bEnc, cEnc, dEnc}
 	for i := 0; i < 8; i++ {
@@ -200,6 +210,34 @@ func ShuffleHiddenG2(g0 *[16]uint32, aEnc, bEnc, cEnc, dEnc uint32) [16]uint32 {
 		h[i], h[j] = h[j], h[i]
 	}
 	return h
+}
+
+// shuffleHiddenG2Into runs the eight swaps in place, on a buffer the caller has
+// already filled with the Group 0-1 words. The swaps are sequential and order
+// dependent, so they are written out rather than looped: that removes the
+// per-swap nibble branch and the index-constant load.
+//
+// Every constant in g2ShuffleXORConsts is under 16, so masking the XOR of the
+// whole word down to four bits gives the same index as XORing the nibble --
+// and unlike the latter it is provably in range, which takes the bounds check
+// off all sixteen accesses.
+func shuffleHiddenG2Into(h *[16]uint32, aEnc, bEnc, cEnc, dEnc uint32) {
+	j := (aEnc ^ 3) & 15
+	h[0], h[j] = h[j], h[0]
+	j = (bEnc ^ 0xd) & 15
+	h[1], h[j] = h[j], h[1]
+	j = (cEnc ^ 0xb) & 15
+	h[2], h[j] = h[j], h[2]
+	j = (dEnc ^ 6) & 15
+	h[3], h[j] = h[j], h[3]
+	j = (aEnc>>4 ^ 1) & 15
+	h[4], h[j] = h[j], h[4]
+	j = (bEnc >> 4) & 15
+	h[5], h[j] = h[j], h[5]
+	j = (cEnc>>4 ^ 0xe) & 15
+	h[6], h[j] = h[j], h[6]
+	j = (dEnc>>4 ^ 4) & 15
+	h[7], h[j] = h[j], h[7]
 }
 
 // g2PermTable maps each round's G0 hidden word indices to G2 indices.

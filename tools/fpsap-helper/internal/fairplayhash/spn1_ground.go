@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BlueOak-1.0.0
+
 package fairplayhash
 
 // TailInput computes the input to the tail white-box AES SPN (TailSPN) fully

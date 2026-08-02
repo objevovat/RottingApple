@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BlueOak-1.0.0
+
 package fairplayhash
 
 // WBAESTypeI and WBAESTypeII expose the white-box AES tables so pkg/fpbridge can
