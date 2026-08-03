@@ -22,7 +22,7 @@ RottingApple (MIT OR Apache-2.0) incorporates or invokes the following third-par
 - **License:** GPL-3.0 (see `tools/fpsap-helper/LICENSE`).
 - **Distribution:** Build with Go (`scripts/build-windows.sh`) and ship `fpsap-helper` / `fpsap-helper.exe` next to `rottingapple`. Do not embed the GPL binary inside `rottingapple`.
 - **Contents:** the exchange is computed natively under `tools/fpsap-helper/internal/`. No ARM64 interpreter and no snapshot of Apple's signed binary are present. Constant white-box tables remain, because for white-box cryptography the key is dissolved into the tables — the tables *are* the cipher, and there is no smaller form. See `tools/fpsap-helper/PROVENANCE.md`.
-- **Inner licences:** `internal/fpsapcore` is **LGPL-3.0** (derived from doubletake, see below); `internal/fpbridge` and `internal/fairplayhash` are **Blue Oak 1.0.0**. Every file carries an SPDX header. Both flow into this directory's GPL-3.0 without friction.
+- **Inner licences:** `internal/fpsapcore` is **LGPL-3.0** in full (derived from doubletake, see below). `internal/fairplayhash` is **Blue Oak 1.0.0**. `internal/fpbridge` is **mostly Blue Oak 1.0.0 with four LGPL-3.0 exceptions** — `fp_sap_session.go`, `fp_sap_m3.go`, `mode_identity_test.go` and `session_xcheck_test.go` were written here but modelled on doubletake's `exchangeM3` and `validateFPSAPRecord`, so they are marked LGPL-3.0-or-later. Every file carries an SPDX header stating which it is. All of it flows into this directory's GPL-3.0 without friction; the split matters only if you lift a package out on its own.
 
 ## doubletake
 

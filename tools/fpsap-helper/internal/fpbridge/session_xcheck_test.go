@@ -1,4 +1,5 @@
-// SPDX-License-Identifier: BlueOak-1.0.0
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Written here, but modelled on github.com/omarroth/doubletake. See ../fpsapcore/NOTICE.md.
 
 package fpbridge
 
